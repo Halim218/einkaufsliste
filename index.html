@@ -154,9 +154,26 @@
         function loadItems() {
             var itemList = document.getElementById('itemList');
             database.ref('items').on('value', function(snapshot) {
-                itemList.innerHTML = ''; // Tabelle leeren
+                var items = [];
                 snapshot.forEach(function(childSnapshot) {
                     var item = childSnapshot.val();
+                    items.push({
+                        key: childSnapshot.key,
+                        name: item.name,
+                        quantity: item.quantity,
+                        done: item.done || false
+                    });
+                });
+
+                // Sortieren der Artikel alphabetisch nach Name und dann nach Anzahl aufsteigend
+                items.sort(function(a, b) {
+                    if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
+                    if (a.name.toLowerCase() > b.name.toLowerCase()) return 1;
+                    return a.quantity - b.quantity;
+                });
+
+                itemList.innerHTML = ''; // Tabelle leeren und neu aufbauen
+                items.forEach(function(item) {
                     var tr = document.createElement('tr');
                     var tdName = document.createElement('td');
                     tdName.textContent = item.name;
@@ -165,23 +182,20 @@
                     tr.appendChild(tdName);
                     tr.appendChild(tdQuantity);
 
-                    // Klassen für erledigte Artikel hinzufügen
                     if (item.done) {
                         tr.classList.add('done');
                     }
 
-                    // Klick-Event für Toggle zwischen erledigt und nicht erledigt
                     tr.addEventListener('click', function() {
-                        toggleDone(childSnapshot.key, !item.done);
+                        toggleDone(item.key, !item.done);
                     });
 
-                    // Löschen-Button hinzufügen
                     var deleteButton = document.createElement('button');
                     deleteButton.className = 'deleteButton';
                     deleteButton.innerHTML = '<img src="https://img.icons8.com/ios-glyphs/30/000000/trash.png" alt="Löschen">';
                     deleteButton.addEventListener('click', function(event) {
-                        event.stopPropagation(); // Verhindert das Auslösen des Toggle-Events
-                        deleteItem(childSnapshot.key);
+                        event.stopPropagation();
+                        deleteItem(item.key);
                     });
                     tdName.appendChild(deleteButton);
 
@@ -201,7 +215,7 @@
         }
 
         function checkKeyPress(event) {
-            if (event.keyCode === 13) { // Enter-Taste
+            if (event.keyCode === 13) {
                 addItem();
             }
         }
