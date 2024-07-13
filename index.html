@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einkaufsliste</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        #container {
+            width: 90%;
+            max-width: 500px;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            margin-top: 0;
+        }
+        input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+        button.reset {
+            background: #dc3545;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Einkaufsliste</h1>
+        <input type="text" id="itemInput" placeholder="Neuer Artikel">
+        <button onclick="addItem()">Hinzufügen</button>
+        <button class="reset" onclick="resetList()">Zurücksetzen</button>
+        <ul id="itemList"></ul>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script>
+        // Firebase-Konfiguration
+        var firebaseConfig = {
+            apiKey: "AIzaSyAAJz4ooYwU7WUdeozdbaBmFnVOyuxIkGc",
+            authDomain: "einkaufsliste-3e15c.firebaseapp.com",
+            databaseURL: "https://einkaufsliste-3e15c-default-rtdb.europe-west1.firebasedatabase.app/",
+            projectId: "einkaufsliste-3e15c",
+            storageBucket: "einkaufsliste-3e15c.appspot.com",
+            messagingSenderId: "966083993198",
+            appId: "1:966083993198:web:d4be33c6b9772457c9907f"
+        };
+        // Firebase initialisieren
+        firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+
+        function addItem() {
+            var input = document.getElementById('itemInput');
+            var newItem = input.value;
+            if (newItem) {
+                var newItemRef = database.ref('items').push();
+                newItemRef.set({
+                    text: newItem
+                });
+                input.value = '';
+            }
+        }
+
+        function resetList() {
+            database.ref('items').remove();
+        }
+
+        function loadItems() {
+            var itemList = document.getElementById('itemList');
+            database.ref('items').on('value', function(snapshot) {
+                itemList.innerHTML = '';
+                snapshot.forEach(function(childSnapshot) {
+                    var item = childSnapshot.val();
+                    var li = document.createElement('li');
+                    li.textContent = item.text;
+                    itemList.appendChild(li);
+                });
+            });
+        }
+
+        loadItems();
+    </script>
+</body>
+</html>
