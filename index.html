@@ -18,7 +18,7 @@
         }
         #container {
             width: 90%;
-            max-width: 500px;
+            max-width: 700px;
             background: #fff;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -26,14 +26,14 @@
         }
         h1 {
             display: flex;
-            align-items: center; /* Zentriert Text und Datum nebeneinander */
-            justify-content: space-between; /* Platziert Text und Datum am linken und rechten Rand */
+            align-items: center;
+            justify-content: space-between;
             margin-top: 0;
         }
         #currentDate {
             font-size: 14px;
             color: #888;
-            margin-left: 10px; /* Abstand zwischen Titel und Datum */
+            margin-left: 10px;
         }
         input {
             width: calc(100% - 22px);
@@ -53,13 +53,18 @@
         button.reset {
             background: #dc3545;
         }
-        ul {
-            list-style-type: none;
-            padding: 0;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
-        li {
-            padding: 8px 0;
+        th, td {
+            padding: 10px;
+            text-align: left;
             border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
         }
         .done {
             text-decoration: line-through;
@@ -73,7 +78,15 @@
         <input type="text" id="itemInput" placeholder="Neuer Artikel" onkeypress="checkKeyPress(event)">
         <button onclick="addItem()">Hinzufügen</button>
         <button class="reset" onclick="resetList()">Zurücksetzen</button>
-        <ul id="itemList"></ul>
+        <table id="itemTable">
+            <thead>
+                <tr>
+                    <th>Anzahl</th>
+                    <th>Artikel</th>
+                </tr>
+            </thead>
+            <tbody id="itemList"></tbody>
+        </table>
     </div>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
@@ -93,11 +106,22 @@
 
         function addItem() {
             var input = document.getElementById('itemInput');
-            var newItem = input.value.trim();
-            if (newItem !== "") {
+            var newItemText = input.value.trim();
+            var newItemName = newItemText;
+            var newItemQuantity = 1; // Standardmäßig 1 Stück
+
+            // Überprüfen, ob die Eingabe eine Anzahl enthält (z.B. "Tomaten 2" oder "2 Tomaten")
+            var match = newItemText.match(/^(\d+)\s*(.+)|(.+)\s+(\d+)$/);
+            if (match) {
+                newItemName = (match[2] || match[3]).trim(); // Extrahiere und entferne Leerzeichen um den Artikelnamen
+                newItemQuantity = parseInt(match[1] || match[4], 10); // Extrahiere und konvertiere die Anzahl
+            }
+
+            if (newItemName !== "") {
                 var newItemRef = database.ref('items').push();
                 newItemRef.set({
-                    text: newItem
+                    name: newItemName,
+                    quantity: newItemQuantity
                 });
                 input.value = '';
             }
@@ -110,18 +134,28 @@
         function loadItems() {
             var itemList = document.getElementById('itemList');
             database.ref('items').on('value', function(snapshot) {
-                itemList.innerHTML = '';
+                itemList.innerHTML = ''; // Tabelle leeren
                 snapshot.forEach(function(childSnapshot) {
                     var item = childSnapshot.val();
-                    var li = document.createElement('li');
-                    li.textContent = item.text;
+                    var tr = document.createElement('tr');
+                    var tdQuantity = document.createElement('td');
+                    tdQuantity.textContent = item.quantity;
+                    var tdName = document.createElement('td');
+                    tdName.textContent = item.name;
+                    tr.appendChild(tdQuantity);
+                    tr.appendChild(tdName);
+
+                    // Klassen für erledigte Artikel hinzufügen
                     if (item.done) {
-                        li.classList.add('done');
+                        tr.classList.add('done');
                     }
-                    li.addEventListener('click', function() {
+
+                    // Klick-Event für Toggle zwischen erledigt und nicht erledigt
+                    tr.addEventListener('click', function() {
                         toggleDone(childSnapshot.key, !item.done);
                     });
-                    itemList.appendChild(li);
+
+                    itemList.appendChild(tr);
                 });
             });
         }
@@ -133,7 +167,7 @@
         }
 
         function checkKeyPress(event) {
-            if (event.keyCode === 13) { // Enter key
+            if (event.keyCode === 13) { // Enter-Taste
                 addItem();
             }
         }
@@ -146,7 +180,7 @@
             currentDateElement.textContent = formattedDate;
         }
 
-        setCurrentDate(); // Setzt das aktuelle Datum beim Laden der Seite
+        setCurrentDate();
 
         loadItems();
     </script>
