@@ -25,7 +25,15 @@
             border-radius: 8px;
         }
         h1 {
+            display: flex;
+            align-items: center; /* Zentriert Text und Datum nebeneinander */
+            justify-content: space-between; /* Platziert Text und Datum am linken und rechten Rand */
             margin-top: 0;
+        }
+        #currentDate {
+            font-size: 14px;
+            color: #888;
+            margin-left: 10px; /* Abstand zwischen Titel und Datum */
         }
         input {
             width: calc(100% - 22px);
@@ -61,7 +69,7 @@
 </head>
 <body>
     <div id="container">
-        <h1>Einkaufsliste</h1>
+        <h1>Einkaufsliste<span id="currentDate"></span></h1>
         <input type="text" id="itemInput" placeholder="Neuer Artikel" onkeypress="checkKeyPress(event)">
         <button onclick="addItem()">Hinzufügen</button>
         <button class="reset" onclick="resetList()">Zurücksetzen</button>
@@ -129,6 +137,16 @@
                 addItem();
             }
         }
+
+        function setCurrentDate() {
+            var currentDateElement = document.getElementById('currentDate');
+            var today = new Date();
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            var formattedDate = today.toLocaleDateString('de-DE', options);
+            currentDateElement.textContent = formattedDate;
+        }
+
+        setCurrentDate(); // Setzt das aktuelle Datum beim Laden der Seite
 
         loadItems();
     </script>
