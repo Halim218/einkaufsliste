@@ -62,6 +62,7 @@
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            position: relative;
         }
         th {
             background-color: #f2f2f2;
@@ -69,6 +70,25 @@
         .done {
             text-decoration: line-through;
             color: #888;
+        }
+        .deleteButton {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            display: none;
+            padding: 0;
+        }
+        .deleteButton img {
+            width: 20px;
+            height: 20px;
+        }
+        tr:hover .deleteButton {
+            display: inline;
         }
     </style>
 </head>
@@ -81,8 +101,8 @@
         <table id="itemTable">
             <thead>
                 <tr>
-                    <th>Anzahl</th>
                     <th>Artikel</th>
+                    <th>Anzahl</th>
                 </tr>
             </thead>
             <tbody id="itemList"></tbody>
@@ -138,12 +158,12 @@
                 snapshot.forEach(function(childSnapshot) {
                     var item = childSnapshot.val();
                     var tr = document.createElement('tr');
-                    var tdQuantity = document.createElement('td');
-                    tdQuantity.textContent = item.quantity;
                     var tdName = document.createElement('td');
                     tdName.textContent = item.name;
-                    tr.appendChild(tdQuantity);
+                    var tdQuantity = document.createElement('td');
+                    tdQuantity.textContent = item.quantity;
                     tr.appendChild(tdName);
+                    tr.appendChild(tdQuantity);
 
                     // Klassen für erledigte Artikel hinzufügen
                     if (item.done) {
@@ -155,6 +175,16 @@
                         toggleDone(childSnapshot.key, !item.done);
                     });
 
+                    // Löschen-Button hinzufügen
+                    var deleteButton = document.createElement('button');
+                    deleteButton.className = 'deleteButton';
+                    deleteButton.innerHTML = '<img src="https://img.icons8.com/ios-glyphs/30/000000/trash.png" alt="Löschen">';
+                    deleteButton.addEventListener('click', function(event) {
+                        event.stopPropagation(); // Verhindert das Auslösen des Toggle-Events
+                        deleteItem(childSnapshot.key);
+                    });
+                    tdName.appendChild(deleteButton);
+
                     itemList.appendChild(tr);
                 });
             });
@@ -164,6 +194,10 @@
             database.ref('items/' + key).update({
                 done: done
             });
+        }
+
+        function deleteItem(key) {
+            database.ref('items/' + key).remove();
         }
 
         function checkKeyPress(event) {
