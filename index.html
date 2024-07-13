@@ -53,12 +53,16 @@
             padding: 8px 0;
             border-bottom: 1px solid #ddd;
         }
+        .done {
+            text-decoration: line-through;
+            color: #888;
+        }
     </style>
 </head>
 <body>
     <div id="container">
         <h1>Einkaufsliste</h1>
-        <input type="text" id="itemInput" placeholder="Neuer Artikel">
+        <input type="text" id="itemInput" placeholder="Neuer Artikel" onkeypress="checkKeyPress(event)">
         <button onclick="addItem()">Hinzufügen</button>
         <button class="reset" onclick="resetList()">Zurücksetzen</button>
         <ul id="itemList"></ul>
@@ -66,7 +70,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <script>
-        // Firebase-Konfiguration
+        // Firebase-Konfiguration wie zuvor
         var firebaseConfig = {
             apiKey: "AIzaSyAAJz4ooYwU7WUdeozdbaBmFnVOyuxIkGc",
             authDomain: "einkaufsliste-3e15c.firebaseapp.com",
@@ -76,14 +80,13 @@
             messagingSenderId: "966083993198",
             appId: "1:966083993198:web:d4be33c6b9772457c9907f"
         };
-        // Firebase initialisieren
         firebase.initializeApp(firebaseConfig);
         var database = firebase.database();
 
         function addItem() {
             var input = document.getElementById('itemInput');
-            var newItem = input.value;
-            if (newItem) {
+            var newItem = input.value.trim();
+            if (newItem !== "") {
                 var newItemRef = database.ref('items').push();
                 newItemRef.set({
                     text: newItem
@@ -104,9 +107,27 @@
                     var item = childSnapshot.val();
                     var li = document.createElement('li');
                     li.textContent = item.text;
+                    if (item.done) {
+                        li.classList.add('done');
+                    }
+                    li.addEventListener('click', function() {
+                        toggleDone(childSnapshot.key, !item.done);
+                    });
                     itemList.appendChild(li);
                 });
             });
+        }
+
+        function toggleDone(key, done) {
+            database.ref('items/' + key).update({
+                done: done
+            });
+        }
+
+        function checkKeyPress(event) {
+            if (event.keyCode === 13) { // Enter key
+                addItem();
+            }
         }
 
         loadItems();
